@@ -1,0 +1,28 @@
+{
+  "albums": [
+    {
+      "id": "0a2c8a39",
+      "name": "Summer vacation 2015",
+      "description": "",
+      "created_at": "2026-03-16 13:29"
+    }
+  ],
+  "images": [
+    {
+      "id": "2f484c2c",
+      "album_id": "0a2c8a39",
+      "filename": "28d2e0e19d6f.jpg",
+      "original_name": "vacation2015.jpg",
+      "caption": "a group of people standing in front of a blue sky",
+      "uploaded_at": "2026-03-16 13:30"
+    },
+    {
+      "id": "f89d2db3",
+      "album_id": "0a2c8a39",
+      "filename": "54c99f1b62ad.webp",
+      "original_name": "vacation2.webp",
+      "caption": "two women walking down a path in front of the ocean",
+      "uploaded_at": "2026-03-16 13:41"
+    }
+  ]
+}

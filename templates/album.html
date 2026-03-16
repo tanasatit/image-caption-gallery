@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ album.name }} – Image Caption Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #0e0e12;
+            --surface: #1a1a22;
+            --surface-hover: #24242f;
+            --border: #2a2a36;
+            --text: #e8e8ed;
+            --text-muted: #8888a0;
+            --accent: #6c5ce7;
+            --accent-light: #a29bfe;
+            --danger: #e74c3c;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        a { color: var(--accent-light); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* ---- Header ---- */
+        .header {
+            padding: 32px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .breadcrumb {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+        .header .desc {
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ---- Buttons ---- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            border-radius: 10px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #5b4bd4; transform: translateY(-1px); }
+        .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent-light); }
+        .btn-sm { padding: 6px 14px; font-size: 0.82rem; }
+        .btn-danger-sm { padding: 6px 14px; font-size: 0.82rem; background: transparent; color: var(--danger); border: 1px solid var(--danger); border-radius: 8px; cursor: pointer; font-family: inherit; }
+        .btn-danger-sm:hover { background: var(--danger); color: #fff; }
+
+        /* ---- Toolbar ---- */
+        .toolbar {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .image-count { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* ---- Upload Area ---- */
+        .upload-zone {
+            max-width: 1200px;
+            margin: 0 auto 32px;
+            padding: 0 40px;
+        }
+        .upload-box {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-box:hover, .upload-box.dragover {
+            border-color: var(--accent);
+            background: rgba(108, 92, 231, 0.05);
+        }
+        .upload-box .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+        .upload-box p { color: var(--text-muted); margin-bottom: 16px; }
+        .upload-box input[type="file"] { display: none; }
+
+        /* ---- Upload Progress ---- */
+        .upload-status {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px 24px;
+            display: none;
+        }
+        .upload-status.active { display: block; }
+        .progress-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+            border-radius: 4px;
+        }
+        .progress-text { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ---- Image Grid ---- */
+        .images-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .image-card {
+            background: var(--surface);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .image-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 8px 30px rgba(108, 92, 231, 0.1);
+        }
+
+        .image-wrapper {
+            height: 220px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s;
+        }
+        .image-card:hover .image-wrapper img { transform: scale(1.05); }
+
+        .image-details {
+            padding: 16px 20px;
+        }
+        .caption-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text);
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            border-left: 3px solid var(--accent);
+        }
+        .caption-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-light);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .image-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .image-actions { display: flex; gap: 8px; }
+
+        /* ---- Empty State ---- */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            grid-column: 1 / -1;
+        }
+        .empty-state .icon { font-size: 4rem; opacity: 0.3; margin-bottom: 16px; }
+        .empty-state h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        .empty-state p { color: var(--text-muted); }
+
+        /* ---- Lightbox ---- */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px;
+        }
+        .lightbox.active { display: flex; }
+        .lightbox img {
+            max-width: 90%;
+            max-height: 70vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .lightbox-caption {
+            margin-top: 24px;
+            color: var(--text);
+            font-size: 1.1rem;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+            padding: 16px 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 24px;
+            right: 32px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .lightbox-close:hover { opacity: 1; }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 640px) {
+            .header, .toolbar, .upload-zone, .upload-status, .images-grid { padding-left: 20px; padding-right: 20px; }
+            .header h1 { font-size: 1.6rem; }
+            .images-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="breadcrumb"><a href="/">Gallery</a> / {{ album.name }}</div>
+        <h1>{{ album.name }}</h1>
+        {% if album.description %}
+            <p class="desc">{{ album.description }}</p>
+        {% endif %}
+    </div>
+
+    <div class="toolbar">
+        <span class="image-count">{{ images|length }} image{{ 's' if images|length != 1 else '' }}</span>
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">+ Upload Images</button>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="upload-zone">
+        <div class="upload-box" id="uploadBox">
+            <div class="icon">&#128228;</div>
+            <p>Drag & drop images here, or click to browse</p>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Supports PNG, JPG, JPEG, GIF, BMP, WEBP (max 16 MB each)</span>
+            <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="upload-status" id="uploadStatus">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <span class="progress-text" id="progressText">Uploading and generating captions...</span>
+    </div>
+
+    <!-- Images Grid -->
+    <div class="images-grid" id="imagesGrid">
+        {% if images %}
+            {% for img in images %}
+            <div class="image-card" id="card-{{ img.id }}">
+                <div class="image-wrapper" onclick="openLightbox('/static/uploads/{{ img.filename }}', '{{ img.caption | e }}')">
+                    <img src="/static/uploads/{{ img.filename }}" alt="{{ img.caption }}" loading="lazy">
+                </div>
+                <div class="image-details">
+                    <div class="caption-label">AI Caption</div>
+                    <div class="caption-text" id="caption-{{ img.id }}">{{ img.caption }}</div>
+                    <div class="image-meta">
+                        <span>{{ img.uploaded_at }}</span>
+                        <div class="image-actions">
+                            <button class="btn btn-ghost btn-sm" onclick="regenerateCaption('{{ img.id }}')">&#x21bb; Recaption</button>
+                            <button class="btn-danger-sm" onclick="deleteImage('{{ img.id }}')">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state" id="emptyState">
+                <div class="icon">&#128247;</div>
+                <h2>No images yet</h2>
+                <p>Upload images to this album and AI will generate captions for each one</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <img id="lightboxImg" src="" alt="">
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+
+    <script>
+        const albumId = "{{ album.id }}";
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+
+        // ---- Drag & Drop ----
+        uploadBox.addEventListener('click', () => fileInput.click());
+        uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.classList.add('dragover'); });
+        uploadBox.addEventListener('dragleave', () => uploadBox.classList.remove('dragover'));
+        uploadBox.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', e => {
+            if (e.target.files.length) uploadFiles(e.target.files);
+        });
+
+        // ---- Upload ----
+        function uploadFiles(files) {
+            const formData = new FormData();
+            for (let f of files) formData.append('files', f);
+
+            const status = document.getElementById('uploadStatus');
+            const fill = document.getElementById('progressFill');
+            const text = document.getElementById('progressText');
+
+            status.classList.add('active');
+            fill.style.width = '30%';
+            text.textContent = `Uploading ${files.length} image(s) and generating captions...`;
+
+            fetch(`/album/${albumId}/upload`, { method: 'POST', body: formData })
+                .then(r => r.json())
+                .then(data => {
+                    fill.style.width = '100%';
+                    if (data.success) {
+                        text.textContent = `Done! ${data.images.length} image(s) uploaded.`;
+                        setTimeout(() => location.reload(), 800);
+                    } else {
+                        text.textContent = data.error || 'Upload failed';
+                    }
+                })
+                .catch(() => {
+                    fill.style.width = '0%';
+                    text.textContent = 'Network error. Please try again.';
+                });
+        }
+
+        // ---- Regenerate Caption ----
+        function regenerateCaption(imageId) {
+            const el = document.getElementById('caption-' + imageId);
+            const original = el.textContent;
+            el.textContent = 'Generating new caption...';
+            el.style.opacity = '0.6';
+
+            fetch(`/image/${imageId}/caption`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    el.style.opacity = '1';
+                    el.textContent = data.success ? data.caption : original;
+                })
+                .catch(() => {
+                    el.style.opacity = '1';
+                    el.textContent = original;
+                });
+        }
+
+        // ---- Delete Image ----
+        function deleteImage(imageId) {
+            if (!confirm('Delete this image?')) return;
+            fetch(`/image/${imageId}/delete`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const card = document.getElementById('card-' + imageId);
+                        card.style.transition = 'opacity 0.3s';
+                        card.style.opacity = '0';
+                        setTimeout(() => { card.remove(); updateCount(); }, 300);
+                    }
+                });
+        }
+
+        function updateCount() {
+            const cards = document.querySelectorAll('.image-card');
+            document.querySelector('.image-count').textContent =
+                cards.length + ' image' + (cards.length !== 1 ? 's' : '');
+            if (cards.length === 0) location.reload();
+        }
+
+        // ---- Lightbox ----
+        function openLightbox(src, caption) {
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightboxCaption').textContent = caption;
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.getElementById('lightbox').addEventListener('click', e => {
+            if (e.target === e.currentTarget) closeLightbox();
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeLightbox();
+        });
+    </script>
+</body>
+</html>
